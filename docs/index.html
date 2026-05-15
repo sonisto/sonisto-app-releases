@@ -390,18 +390,20 @@
       stable.forEach((release, i) => {
         releasesEl.appendChild(renderRelease(release, i === 0));
       });
-    } catch {
+    } catch(e) {
+      console.log(e);
       showError();
     }
   }
 
-  const renderer = new marked.Renderer();
-  const origLink = renderer.link.bind(renderer);
-  renderer.link = function(token) {
-    const html = origLink(token);
-    return html.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
-  };
-  marked.use({ renderer });
+  marked.use({
+    renderer: {
+      link({ href, title, text }) {
+        const titleAttr = title ? ` title="${title}"` : '';
+        return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`;
+      }
+    }
+  });
 
   loadReleases();
 </script>

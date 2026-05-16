@@ -54,7 +54,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
+            padding: 10px 0 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -65,15 +65,20 @@
         }
 
         .header-logo-icon {
-            width: 28px;
-            height: 28px;
+            height: 50px;
+            width: 150px;
             border-radius: 8px;
-            background: linear-gradient(135deg, #bf5af2, #06b6d4);
         }
 
         .header-logo-text {
             font-size: 15px;
             font-weight: 600;
+        }
+
+        .header-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .header-download {
@@ -274,6 +279,22 @@
         }
 
         @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 0;
+            }
+
+            .header-links {
+                gap: 8px;
+            }
+
+            .header-logo-icon {
+                width: 150px;
+                height: auto;
+            }
+
             .hero h1 {
                 font-size: 22px;
             }
@@ -296,12 +317,18 @@
 <div class="container">
     <header class="header">
         <div class="header-logo">
-            <div class="header-logo-icon"></div>
-            <span class="header-logo-text">Sonisto</span>
+            <a class="header-link" href="https://sonisto.com" target="_blank" rel="noopener">
+                <img class="header-logo-icon" src="logo-full.svg" alt="Sonisto">
+            </a>
         </div>
-        <a class="header-download" href="https://github.com/sonisto/sonisto-app-releases/releases/latest" target="_blank" rel="noopener">
-            Download App
-        </a>
+        <div class="header-links">
+            <a class="header-download" href="https://shop.sonisto.com" target="_blank" rel="noopener">
+                Visit Shop
+            </a>
+            <a class="header-download" href="https://github.com/sonisto/sonisto-app-releases/releases/latest" target="_blank" rel="noopener">
+                Download App
+            </a>
+        </div>
     </header>
 
     <section class="hero">

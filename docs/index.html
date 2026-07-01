@@ -278,6 +278,137 @@
             color: rgba(255, 255, 255, 0.2);
         }
 
+        .download-block {
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .download-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            align-self: flex-start;
+            padding: 11px 22px;
+            border-radius: 100px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            background: linear-gradient(135deg, #bf5af2, #7c3aed);
+            border: 1px solid rgba(191, 90, 242, 0.4);
+            transition: all 0.15s;
+        }
+
+        .download-primary:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .download-toggle {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 12px;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: fit-content;
+            user-select: none;
+            transition: color 0.15s;
+        }
+
+        .download-toggle:hover {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .download-toggle::-webkit-details-marker {
+            display: none;
+        }
+
+        .download-toggle::before {
+            content: '▸';
+            font-size: 10px;
+            transition: transform 0.15s;
+        }
+
+        .download-details[open] .download-toggle::before {
+            transform: rotate(90deg);
+        }
+
+        .download-groups {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 28px;
+            margin-top: 12px;
+        }
+
+        .download-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .download-icon {
+            flex-shrink: 0;
+        }
+
+        /* Apple glyph underfills its viewBox, so it needs to be a touch larger
+           than the Windows glyph to appear the same optical size. */
+        .download-icon.icon-mac {
+            width: 16px;
+            height: 16px;
+        }
+
+        .download-icon.icon-windows {
+            width: 13px;
+            height: 13px;
+        }
+
+        .download-primary .download-icon.icon-mac {
+            width: 17px;
+            height: 17px;
+        }
+
+        .download-primary .download-icon.icon-windows {
+            width: 14px;
+            height: 14px;
+        }
+
+        .download-group-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 2px;
+        }
+
+        .download-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-start;
+            padding: 7px 14px;
+            border-radius: 100px;
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.15s;
+        }
+
+        .download-option:hover {
+            color: #fff;
+            border-color: rgba(191, 90, 242, 0.4);
+            background: rgba(191, 90, 242, 0.08);
+        }
+
         @media (max-width: 600px) {
             .header {
                 flex-direction: column;
@@ -374,6 +505,140 @@
     }).format(d);
   }
 
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const ICON_PATHS = {
+    mac: 'M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z',
+    windows: 'M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801',
+  };
+
+  function keyToOs(key) {
+    return key === 'windows' ? 'windows' : 'mac';
+  }
+
+  function osIcon(os) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'currentColor');
+    svg.setAttribute('class', 'download-icon icon-' + os);
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', ICON_PATHS[os]);
+    svg.appendChild(path);
+    return svg;
+  }
+
+  function buildInstallers(assets) {
+    const out = {};
+    for (const a of assets || []) {
+      const name = (a.name || '').toLowerCase();
+      if (name.endsWith('arm64.dmg')) {
+        out.macArm = { label: 'macOS (Apple Silicon)', url: a.browser_download_url };
+      } else if (name.endsWith('x64.dmg')) {
+        out.macIntel = { label: 'macOS (Intel)', url: a.browser_download_url };
+      } else if (name.endsWith('.exe')) {
+        out.windows = { label: 'Windows', url: a.browser_download_url };
+      }
+    }
+    return out;
+  }
+
+  function pickPrimaryKey(installers) {
+    const ua = navigator.userAgent;
+    if (/Windows/i.test(ua) && installers.windows) return 'windows';
+    if (/Mac/i.test(ua)) {
+      if (installers.macArm) return 'macArm';
+      if (installers.macIntel) return 'macIntel';
+    }
+    return Object.keys(installers)[0] || null;
+  }
+
+  // macOS architecture is unreliable via userAgent (Safari reports Apple Silicon
+  // as Intel), so default to Apple Silicon and refine to Intel when the browser
+  // exposes a trustworthy architecture hint.
+  async function refineMacArch(installers, primaryKey, apply) {
+    if (primaryKey !== 'macArm' || !installers.macIntel) return;
+    if (!navigator.userAgentData || !navigator.userAgentData.getHighEntropyValues) return;
+    try {
+      const data = await navigator.userAgentData.getHighEntropyValues(['architecture']);
+      if (data.architecture === 'x86') apply('macIntel');
+    } catch (e) { /* ignore — keep default */ }
+  }
+
+  function renderDownloadBlock(release) {
+    const installers = buildInstallers(release.assets);
+    const keys = Object.keys(installers);
+    if (keys.length === 0) return null;
+
+    const block = document.createElement('div');
+    block.className = 'download-block';
+
+    const primaryKey = pickPrimaryKey(installers);
+
+    const primary = document.createElement('a');
+    primary.className = 'download-primary';
+    primary.target = '_blank';
+    primary.rel = 'noopener';
+    const setPrimary = (key) => {
+      primary.href = installers[key].url;
+      primary.innerHTML = '';
+      primary.appendChild(osIcon(keyToOs(key)));
+      const label = document.createElement('span');
+      label.textContent = 'Download for ' + installers[key].label;
+      primary.appendChild(label);
+    };
+    setPrimary(primaryKey);
+    block.appendChild(primary);
+
+    if (keys.length > 1) {
+      const details = document.createElement('details');
+      details.className = 'download-details';
+
+      const summary = document.createElement('summary');
+      summary.className = 'download-toggle';
+      summary.textContent = 'Other platforms';
+      details.appendChild(summary);
+
+      const groupsWrap = document.createElement('div');
+      groupsWrap.className = 'download-groups';
+
+      const groups = [
+        { label: 'macOS', keys: ['macArm', 'macIntel'] },
+        { label: 'Windows', keys: ['windows'] },
+      ];
+      for (const group of groups) {
+        const present = group.keys.filter(k => installers[k]);
+        if (present.length === 0) continue;
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'download-group';
+
+        const groupLabel = document.createElement('div');
+        groupLabel.className = 'download-group-label';
+        groupLabel.textContent = group.label;
+        groupEl.appendChild(groupLabel);
+
+        for (const key of present) {
+          const opt = document.createElement('a');
+          opt.className = 'download-option';
+          opt.href = installers[key].url;
+          opt.target = '_blank';
+          opt.rel = 'noopener';
+          opt.appendChild(osIcon(keyToOs(key)));
+          const label = document.createElement('span');
+          label.textContent = installers[key].label;
+          opt.appendChild(label);
+          groupEl.appendChild(opt);
+        }
+        groupsWrap.appendChild(groupEl);
+      }
+      details.appendChild(groupsWrap);
+      block.appendChild(details);
+    }
+
+    refineMacArch(installers, primaryKey, setPrimary);
+    return block;
+  }
+
   function renderRelease(release, isLatest) {
     const card = document.createElement('div');
     card.className = 'release-card';
@@ -405,6 +670,12 @@
 
     card.appendChild(header);
     card.appendChild(body);
+
+    if (isLatest) {
+      const downloads = renderDownloadBlock(release);
+      if (downloads) card.appendChild(downloads);
+    }
+
     return card;
   }
 

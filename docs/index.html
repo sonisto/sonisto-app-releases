@@ -322,6 +322,22 @@
             gap: 12px;
         }
 
+        /* Latest-release downloads, lifted directly under the hero. No card
+           separator here — it's a standalone block, not a card footer. */
+        .latest-download:empty {
+            display: none;
+        }
+
+        .latest-download {
+            margin: 40px 0 0;
+        }
+
+        .latest-download .download-block {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
         .download-primary {
             display: inline-flex;
             align-items: center;
@@ -367,13 +383,14 @@
             display: none;
         }
 
-        .download-toggle::before {
-            content: '▸';
-            font-size: 10px;
+        .download-caret {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
             transition: transform 0.15s;
         }
 
-        .download-details[open] .download-toggle::before {
+        .download-details[open] .download-caret {
             transform: rotate(90deg);
         }
 
@@ -500,6 +517,8 @@
         </div>
     </header>
 
+    <div class="latest-download" id="latest-download"></div>
+
     <section class="hero">
         <h1>What's New</h1>
         <p>Latest updates and improvements to Sonisto</p>
@@ -516,19 +535,23 @@
   const REPO = 'sonisto/sonisto-app-releases';
   const API_URL = `https://api.github.com/repos/${REPO}/releases?per_page=100`;
   const releasesEl = document.getElementById('releases');
+  const latestDownloadEl = document.getElementById('latest-download');
 
   function showLoading() {
+    latestDownloadEl.innerHTML = '';
     releasesEl.innerHTML = Array.from({ length: 3 }, () =>
       '<div class="skeleton-card"><div class="skeleton-line wide"></div><div class="skeleton-line medium"></div><div class="skeleton-line narrow"></div></div>'
     ).join('');
   }
 
   function showError() {
+    latestDownloadEl.innerHTML = '';
     releasesEl.innerHTML =
       '<div class="error-message">Unable to load release notes. Please try again later.</div>';
   }
 
   function showEmpty() {
+    latestDownloadEl.innerHTML = '';
     releasesEl.innerHTML =
       '<div class="empty-message">No releases yet — check back soon.</div>';
   }
@@ -561,6 +584,24 @@
     svg.setAttribute('aria-hidden', 'true');
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', ICON_PATHS[os]);
+    svg.appendChild(path);
+    return svg;
+  }
+
+  // Disclosure chevron for the "Other platforms" toggle. Points right; CSS
+  // rotates it to point down when the details element is open.
+  function caretIcon() {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('class', 'download-caret');
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', 'M9 6l6 6-6 6');
     svg.appendChild(path);
     return svg;
   }
@@ -633,7 +674,10 @@
 
       const summary = document.createElement('summary');
       summary.className = 'download-toggle';
-      summary.textContent = 'Other platforms';
+      summary.appendChild(caretIcon());
+      const summaryLabel = document.createElement('span');
+      summaryLabel.textContent = 'Other platforms';
+      summary.appendChild(summaryLabel);
       details.appendChild(summary);
 
       const groupsWrap = document.createElement('div');
@@ -709,11 +753,6 @@
     card.appendChild(header);
     card.appendChild(body);
 
-    if (isLatest) {
-      const downloads = renderDownloadBlock(release);
-      if (downloads) card.appendChild(downloads);
-    }
-
     return card;
   }
 
@@ -729,6 +768,11 @@
         return;
       }
       releasesEl.innerHTML = '';
+      // Latest release's downloads sit under the hero, above the release list.
+      latestDownloadEl.innerHTML = '';
+      const latestDownloads = renderDownloadBlock(stable[0]);
+      if (latestDownloads) latestDownloadEl.appendChild(latestDownloads);
+
       stable.forEach((release, i) => {
         releasesEl.appendChild(renderRelease(release, i === 0));
       });
